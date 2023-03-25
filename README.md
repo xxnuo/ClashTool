@@ -1,8 +1,8 @@
 > 因 Clash.Meta 内核已经支持这些功能，所以此项目不再更新 XD  
-> 推荐使用 [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) 内核，具有 Clash Premium 相同的功能和额外特性
-> 支持 Meta 内核的桌面客户端：[Clash Verge](https://github.com/zzzgydi/clash-verge)
-> 兼容配置的 iOS 客户端：[Stash](https://stash.wiki) (付费)
-> Clash Meta for iOS 在开发中
+> 推荐使用 [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) 内核，具有 Clash Premium 相同的功能和额外特性  
+> 支持 Meta 内核的桌面客户端：[Clash Verge](https://github.com/zzzgydi/clash-verge)  
+> 兼容配置的 iOS 客户端：[Stash](https://stash.wiki) (付费)  
+> Clash Meta for iOS 在开发中  
 
 # ClashTool
 
