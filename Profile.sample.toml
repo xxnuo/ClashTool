@@ -1,0 +1,446 @@
+# 这是一份支持 clash 内核的配置（包括 clash/ premium/ Meta）
+# 配置文件中时间相关配置均以秒为单位
+
+[ClashTool]
+# 机场线路的更新间隔
+# 可选参数，程序内默认值为 30
+update-interval.Proxy-Provider = 30
+# 在线规则的更新间隔，不需要经常更新可以设置的久一点
+# 可选参数，程序内默认值为 86400
+update-interval.Rules = 86400
+# url-test 类型代理组默认的测速间隔时间，如果 Proxy-Groups 内没有设置才会用这个值
+# 可选参数，程序内默认值为 300
+default.url-test-interval = 300
+
+# web 服务需要的参数，如下配置后访问
+# http://127.0.0.1:50510/Output.yaml?token=asecret
+# 即可下载更新配置文件
+web.enable = true
+web.host = '127.0.0.1'
+web.port = 50510
+web.token = 'asecret'
+
+[Clash-Base]
+# Clash 配置文件模板，后续的配置只会覆盖这个文件内容中的 'proxies' 和 'rules' 字段
+# type 可取 file/http, 分别支持本地文件和远程URL下载文件
+type = 'file'
+path = './ClashBase.yaml'
+# 远程配置例子：
+# type = 'http'
+# url = 'https://example.com/1.txt'
+
+# 下面都是例子
+[[Proxy-Provider]]
+# 支持两种来源：
+# 1. type = 'proxy'
+#    直接提供线路文本（最少必须提供：协议、密码、IP、端口、名称）
+#    最少信息如：trojan://password1@1.2.3.4:443#美国
+# 2. type = 'http'
+#    提供订阅链接
+#    支持解析:
+#     - Clash 订阅
+#     - 线路、线路组（如果是base64格式会自动转换为文本）
+type = 'proxy'
+name = '美国自建'
+url = 'trojan://password1@1.2.3.4:443?security=tls&headerType=none&type=tcp&sni=abc.net#美国'
+
+[[Proxy-Provider]]
+type = 'proxy'
+name = '新加坡自建'
+url = 'trojan://password2@5.6.7.8:443?security =tls&headerType=none&type=tcp&sni=abc.net#新加坡'
+
+[[Proxy-Provider]]
+type = 'http'
+name = '机场1订阅链接'
+url = 'https://sub1.airport1.com/api/v1/client/subscribe?token=1234567890'
+filter.exclude = '(刷新订阅|计量)' # 正则表达式，排除匹配到的节点
+#filter.include = ''
+
+[[Proxy-Provider]]
+type = 'http.clash'
+name = '机场2订阅链接'
+url = 'https://sub.airport2server.com/link/abcdefg123456?clash=1'
+
+# 总策略组
+# 下面是我自用的配置，可以不修改直接使用
+# 也可以按自己的需要仿照着修改，注意策略组和规则对应
+
+[[Proxy-Groups]]
+name = '节点选择'
+type = 'select'
+proxies = [
+    '自动选择',
+    '负载均衡',
+    '手动切换',
+    '美国节点',
+    '香港节点',
+    '台湾节点',
+    '狮城节点',
+    '日本节点',
+    '韩国节点',
+    'DIRECT'
+]
+
+[[Proxy-Groups]]
+name = '自动选择'
+type = 'url-test'
+interval = 300
+tolerance = 50
+url = 'https://www.google.com/humans.txt'
+proxies = [
+    '{ALL}', # 会被替换为所有线路节点，不包括 DIRECT
+]
+
+[[Proxy-Groups]]
+name = '负载均衡'
+type = 'load-balance'
+#interval = 300
+strategy = 'consistent-hashing'
+tolerance = 50
+url = 'https://www.google.com/humans.txt'
+proxies = [
+    '{ALL}'
+]
+
+[[Proxy-Groups]]
+name = '手动切换'
+type = 'select'
+proxies = [
+    '{ALL}',
+    'DIRECT'
+]
+
+[[Proxy-Groups]]
+name = 'NewBing'
+type = 'select'
+proxies = [
+    '美国节点',
+    'DIRECT',
+    '节点选择',
+    '香港节点',
+    '台湾节点',
+    '狮城节点',
+    '日本节点',
+    '韩国节点',
+    '手动切换'
+]
+
+[[Proxy-Groups]]
+name = 'uTools'
+type = 'select'
+proxies = [
+    'REJECT',
+    'DIRECT'
+]
+
+[[Proxy-Groups]]
+name = '故障转移'
+type = 'fallback'
+tolerance = 50
+url = 'https://www.google.com/humans.txt'
+proxies = [
+    '{ALL}'
+]
+
+# 代理线路组
+
+[[Proxy-Groups]]
+name = '香港节点'
+type = 'url-test'
+interval = 300 # 几秒钟后才重新测试延迟切换节点
+tolerance = 50
+url = 'https://www.google.com/humans.txt'
+proxies = [
+    '{(港|HK|Hong Kong)}', # {}包裹正则表达式匹配需要包括的节点名称
+]
+
+[[Proxy-Groups]]
+name = '日本节点'
+type = 'url-test'
+interval = 300 # 几秒钟后才重新测试延迟切换节点
+tolerance = 50
+url = 'https://www.google.com/humans.txt'
+proxies = [
+    '{(日本|川日|东京|大阪|泉日|埼玉|沪日|深日|[^-]日|JP|Japan)}',
+]
+
+[[Proxy-Groups]]
+name = '美国节点'
+type = 'url-test'
+interval = 300 # 几秒钟后才重新测试延迟切换节点
+tolerance = 50
+url = 'https://www.google.com/humans.txt'
+proxies = [
+    '{(美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States)}',
+]
+
+[[Proxy-Groups]]
+name = '台湾节点'
+type = 'url-test'
+interval = 300 # 几秒钟后才重新测试延迟切换节点
+tolerance = 50
+url = 'https://www.google.com/humans.txt'
+proxies = [
+    '{(台|新北|彰化|TW|Taiwan)}',
+]
+
+[[Proxy-Groups]]
+name = '韩国节点'
+type = 'url-test'
+interval = 300 # 几秒钟后才重新测试延迟切换节点
+tolerance = 50
+url = 'https://www.google.com/humans.txt'
+proxies = [
+    '{(KR|Korea|KOR|首尔|韩|韓)}',
+]
+
+[[Proxy-Groups]]
+name = '狮城节点'
+type = 'url-test'
+interval = 300 # 几秒钟后才重新测试延迟切换节点
+tolerance = 50
+url = 'https://www.google.com/humans.txt'
+proxies = [
+    '{(新加坡|坡|狮城|SG|Singapore)}',
+]
+
+# 应用策略组
+
+[[Proxy-Groups]]
+name = '微软服务'
+type = 'select'
+proxies = [
+    'DIRECT',
+    '节点选择',
+    '美国节点',
+    '香港节点',
+    '台湾节点',
+    '狮城节点',
+    '日本节点',
+    '韩国节点',
+    '手动切换'
+]
+
+[[Proxy-Groups]]
+name = '苹果服务'
+type = 'select'
+proxies = [
+    'DIRECT',
+    '节点选择',
+    '美国节点',
+    '香港节点',
+    '台湾节点',
+    '狮城节点',
+    '日本节点',
+    '韩国节点',
+    '手动切换'
+]
+
+[[Proxy-Groups]]
+name = '游戏平台'
+type = 'select'
+proxies = [
+    'DIRECT',
+    '节点选择',
+    '美国节点',
+    '香港节点',
+    '台湾节点',
+    '狮城节点',
+    '日本节点',
+    '韩国节点',
+    '手动切换'
+]
+
+[[Proxy-Groups]]
+name = '全球直连'
+type = 'select'
+proxies = [
+    'DIRECT',
+    '节点选择',
+    '自动选择',
+    'REJECT'
+]
+
+[[Proxy-Groups]]
+name = '应用净化'
+type = 'select'
+proxies = [
+    'REJECT',
+    'DIRECT'
+]
+
+[[Proxy-Groups]]
+name = '漏网之鱼'
+type = 'select'
+proxies = [
+    '节点选择',
+    '自动选择',
+    'DIRECT',
+    '香港节点',
+    '台湾节点',
+    '狮城节点',
+    '日本节点',
+    '美国节点',
+    '韩国节点',
+    '手动切换'
+]
+
+# 自定义规则
+
+[[Rules]]
+group = 'uTools'
+ruleset = [
+    # 是否禁用 uTools 的网络
+    'DOMAIN-SUFFIX,u-tools.cn'
+]
+
+[[Rules]]
+group = 'NewBing'
+ruleset = [
+    # ChatGPT
+    'DOMAIN-SUFFIX,bing.com',
+    'DOMAIN-SUFFIX,openai.com',
+    # Twitter
+    'DOMAIN-SUFFIX,twitter.com',
+    'DOMAIN-SUFFIX,twimg.com'
+]
+
+[[Rules]]
+group = '应用净化'
+ruleset = [
+    # 拦截补充
+    'DOMAIN,update.pc.mi.com',
+    'DOMAIN,sdkapi.douyucdn.cn',
+    'DOMAIN,safebrowsing.googleapis.com',
+    # 'DOMAIN-SUFFIX,mihoyo.com'
+]
+
+[[Rules]]
+group = '全球直连'
+ruleset = [
+    'DOMAIN,speedtest.net',
+    'DOMAIN-SUFFIX,baidu.com',
+    'DOMAIN-SUFFIX,mozilla.com',
+    'DOMAIN-SUFFIX,mozilla.org',
+    'DOMAIN-SUFFIX,firefox.com',
+    'DOMAIN,profile.accounts.firefox.com',
+    'DOMAIN-SUFFIX,clash.bfsu.edu.cn',
+    'DOMAIN-SUFFIX,ustc.edu.cn',
+    'DOMAIN-SUFFIX,tsinghua.edu.cn',
+    'DOMAIN-SUFFIX,mushroomtrack.com',
+    'DOMAIN-SUFFIX,alonestreaming.com',
+    'DOMAIN-SUFFIX,cdnlab.live',
+    'DOMAIN-SUFFIX,bitwarden.com',
+    'DOMAIN,clash.razord.top',
+    'DOMAIN,gomirrors.org',
+    'DOMAIN-SUFFIX,download-cdn.jetbrains.com',
+    'DOMAIN-SUFFIX,mozilla.net',
+    'DOMAIN-SUFFIX,tunnels.api.visualstudio.com',
+    'DOMAIN-SUFFIX,sharepoint.com',
+    'DOMAIN-SUFFIX,hellogithub.com',
+    'DOMAIN,cdn.jsdelivr.net',
+    'DOMAIN-SUFFIX,loli.net',
+    'DOMAIN-SUFFIX,deepl.com',
+    'DOMAIN-SUFFIX,steamuserimages-a.akamaihd.net',
+    'DOMAIN-SUFFIX,steampipe.akamaized.net',
+    'PROCESS-NAME,BEService_x64.exe,DIRECT',
+    'PROCESS-NAME,Destiny2.exe,DIRECT',
+    'PROCESS-NAME,destiny2launcher.exe,DIRECT',
+    'PROCESS-NAME,leigod.exe,DIRECT',
+    'PROCESS-NAME,net_test.exe,DIRECT',
+    'DOMAIN-SUFFIX,max-c.com',
+    'DOMAIN-SUFFIX,yunpan.com',
+    'DOMAIN-SUFFIX,soboten.com',
+    'DOMAIN,goproxy.io',
+    'DOMAIN,proxy.golang.com.cn',
+    'DOMAIN,gosum.io',
+    'DOMAIN,npmmirror.com',
+    'DOMAIN,papago.naver.com',
+    'DOMAIN,api.papago-chrome.com',
+    'DOMAIN-SUFFIX,cr173.com',
+    'DOMAIN-SUFFIX,xainjo.com',
+    'DOMAIN-SUFFIX,pc6.com',
+]
+
+[[Rules]]
+group = '节点选择'
+ruleset = [
+    'DOMAIN-SUFFIX,cdn.winget.microsoft.com',
+    'DOMAIN-SUFFIX,storeedgefd.dsx.mp.microsoft.com',
+    'DOMAIN-SUFFIX,cmscdn.papegames.com',
+    'DOMAIN-SUFFIX,visualstudio.com',
+    'DOMAIN-SUFFIX,edge.microsoft.com',
+    'DOMAIN,az764295.vo.msecnd.net',
+    'DOMAIN-SUFFIX,reddit.com',
+    'PROCESS-NAME,sideloadly.exe',
+    'DOMAIN-SUFFIX,zed.dev',
+]
+
+# 包含的 http 远程规则，最终也会被解析为普通 rules, 按顺序 parse
+
+[[Rules]]
+group = '应用净化'
+ruleset = [
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanAD.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanProgramAD.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanEasyPrivacy.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanEasyList.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanEasyListChina.list'
+]
+
+[[Rules]]
+group = '微软服务'
+ruleset = [
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/OneDrive.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Microsoft.list'
+]
+
+[[Rules]]
+group = '苹果服务'
+ruleset = [
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Apple.list'
+]
+
+[[Rules]]
+group = '游戏平台'
+ruleset = [
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/Epic.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/Sony.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/Steam.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/Nintendo.list'
+]
+
+[[Rules]]
+group = '节点选择'
+ruleset = [
+    # telegram
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Telegram.list',
+    # youtube
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/YouTube.list',
+    # GFW
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ProxyGFWlist.list'
+]
+
+[[Rules]]
+group = '全球直连'
+ruleset = [
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/LocalAreaNetwork.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/UnBan.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaIp.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaDomain.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaMedia.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaCompanyIp.list',
+    'https://fastly.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Download.list',
+    '[]GEOIP,LAN,no-resolve', # 也支持解析这种规则
+    '[]GEOIP,PRIVATE,no-resolve',
+    '[]GEOIP,CN,no-resolve'
+]
+
+[[Rules]]
+group = '漏网之鱼'
+ruleset = [
+    '[]FINAL' # 必须放在最后
+]
+
+
+
