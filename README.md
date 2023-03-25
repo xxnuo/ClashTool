@@ -1,7 +1,7 @@
-# ARCHIVED
+# **ARCHIVED**
 
-> 因 Clash.Meta 内核已经支持这些功能，所以此项目不再更新 XD  
-> 推荐使用 [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) 内核，具有 Clash Premium 相同的功能和额外特性  
+> 因 [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) 内核完全支持这些功能，所以此项目不再更新 XD  
+> 推荐使用 [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) 内核，具有 Clash Premium 相同的功能和额外特性，而且完全开源  
 > 支持 Meta 内核的桌面客户端：[Clash Verge](https://github.com/zzzgydi/clash-verge)  
 > 兼容配置的 iOS 客户端：[Stash](https://stash.wiki) (付费)  
 > Clash Meta for iOS 在开发中  
@@ -16,9 +16,9 @@
 
 我只想：
 
-- 聚合多个机场订阅链接和自建线路
-- 使用自己的分流规则
-- 使用别人写好的分流规则
+- 聚合多个订阅链接和线路
+- 方便添加自定规则
+- 使用别人写好的规则
 - 不用手动修改 Clash 难懂的各种 yaml 配置了
 
 ClashTool 现在已经支持这些功能，并且完全兼容 subconverter 原有 list 格式的规则，不需要重写自己原来的规则了。修改也很简单。
